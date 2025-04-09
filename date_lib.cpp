@@ -76,6 +76,51 @@ MyDate::MyDate(Day day, Month month, Year year) : day(day), month(month), year(y
 const MyDate &MyDate::add_day(int days){
     day = Day(day.get_day() + days);
     while (day.get_day() > month.get_max_days(year)) {
-        
+        day = Day(day.get_day() - month.get_max_days(year));
+        ++month;
+        if (month == Month::Jan()) year = Year(year.get_year() - 1);
     }
+    while (day.get_day() > month.get_max_days(year)) {
+        day = Day(day.get_day() - month.get_max_days(year));
+        --month;
+        if (month == Month::Jan()) year = Year(year.get_year() - 1)
+    }
+    return *this;
 }
+
+const MyDate &MyDate::add_month(int months) {
+    int year = months / 12;
+    year = Year(year.get_year() + year);
+    if (year >= 0){
+    months = months % 12;
+        while (months > 0) {
+            ++month;
+            if (month == Month::Jan()) year = Year(year.get_year() + 1);
+            --months;}
+    } else {
+        months = months % 12;
+        while (months < 0) {
+            --month;
+            if (month = Month::Dec()) 
+            year = Year(year.get_year() - 1);
+            ++months;
+        }
+    }
+    return *this;
+}
+
+const MyDate &MyDate::add_year(int years){
+    year = Year(year.get_year() + year);
+    return *this;
+}
+void MyDate::dump(std::ostream &os) const{
+    os << day.get_day() <<
+            '.' << month.get_month() <<
+            '.' << year.get_year();
+};
+
+std::ostream& operator<<(std::ostream &os, const MyDate &obj){
+    obj.dump(os);
+    return os;
+}
+
