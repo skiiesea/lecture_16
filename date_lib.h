@@ -1,3 +1,4 @@
+#include <iostream>
 class Day {
 private:
     int d;
@@ -52,5 +53,7 @@ public:
     const MyDate& add_day(int days);
     const MyDate& add_month(int month);
     const MyDate& add_year(int year);
+    void dump(std::ostream &os) const;
 };
 
+std::ostream& operator<<(std::ostream &os, const MyDate &obj);
