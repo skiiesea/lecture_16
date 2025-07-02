@@ -1,0 +1,15 @@
+# Удаляем предыдущие артефакты
+Remove-Item *.o -ErrorAction SilentlyContinue
+Remove-Item stock_analyst.exe -ErrorAction SilentlyContinue
+
+# Компилируем
+g++ -c StockAnalyst.cpp -o StockAnalyst.o
+g++ -c main.cpp -o main.o
+g++ StockAnalyst.o main.o -o stock_analyst.exe
+
+# Запускаем
+if (Test-Path .\stock_analyst.exe) {
+    .\stock_analyst.exe
+} else {
+    Write-Host "Compilation failed!"
+}
