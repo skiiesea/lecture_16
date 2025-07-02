@@ -13,3 +13,5 @@ if (Test-Path .\stock_analyst.exe) {
 } else {
     Write-Host "Compilation failed!"
 }
+Set-ExecutionPolicy RemoteSigned -Scope Process  # Если нужно разрешить выполнение
+.\build_and_run.ps1
