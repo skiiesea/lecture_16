@@ -1,0 +1,14 @@
+#include "StockAnalyst.hpp"
+#include <iostream>
+
+int main() {
+    StockAnalyst analyst;
+    
+    if (analyst.loadFromCSV("stock_data.csv")) {
+        analyst.printAnalysisReport();
+    } else {
+        std::cout << "Failed to load data or no data provided." << std::endl;
+    }
+    
+    return 0;
+}
