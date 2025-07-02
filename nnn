@@ -1,0 +1,32 @@
+#ifndef STOCKANALYST_HPP
+#define STOCKANALYST_HPP
+
+#include <string>
+
+class StockAnalyst {
+private:
+    struct StockData {
+        std::string date;
+        double price;
+    };
+
+    StockData* data;
+    size_t size;
+    size_t capacity;
+
+    void resize();
+    double parseDouble(const std::string& s) const;
+
+public:
+    StockAnalyst();
+    ~StockAnalyst();
+
+    bool loadFromCSV(const std::string& filename);
+    double calculateAveragePrice() const;
+    double calculateStandardDeviation() const;
+    std::string findDateWithMinPrice() const;
+    std::string findDateWithMaxPrice() const;
+    void printAnalysisReport() const;
+};
+
+#endif // STOCKANALYST_HPP
