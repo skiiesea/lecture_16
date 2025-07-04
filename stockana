@@ -131,3 +131,24 @@ std::pair<std::string, double> StockAnalytor::getMinPriceDay() const {
 
     return minEntry;
 }
+#include "StockAnalytor.hpp"
+#include <iostream>
+
+int main() {
+    StockAnalytor analyzer;
+
+    if (analyzer.loadData("prices.csv")) {
+        std::cout << "Средняя цена: " << analyzer.getMeanPrice() << std::endl;
+        std::cout << "Стандартное отклонение: " << analyzer.getStandardDeviation() << std::endl;
+
+        auto maxDay = analyzer.getMaxPriceDay();
+        std::cout << "Максимальная цена: " << maxDay.second << " (дата: " << maxDay.first << ")" << std::endl;
+
+        auto minDay = analyzer.getMinPriceDay();
+        std::cout << "Минимальная цена: " << minDay.second << " (дата: " << minDay.first << ")" << std::endl;
+    } else {
+        std::cerr << "Не удалось загрузить данные." << std::endl;
+    }
+
+    return 0;
+}
