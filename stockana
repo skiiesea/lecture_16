@@ -1,0 +1,23 @@
+#ifndef STOCKANALYTOR_HPP
+#define STOCKANALYTOR_HPP
+
+#include <string>
+#include <vector>
+
+class StockAnalytor {
+private:
+    std::vector<std::pair<std::string, double>> data; // Дата и цена
+
+    bool parseLine(const std::string& line, std::string& date, double& price);
+    double calculateMean() const;
+
+public:
+    bool loadData(const std::string& filename); // Загрузка данных из файла
+
+    double getMeanPrice() const;                // Средняя цена
+    double getStandardDeviation() const;        // Стандартное отклонение
+    std::pair<std::string, double> getMaxPriceDay() const;  // День с максимальной ценой
+    std::pair<std::string, double> getMinPriceDay() const;  // День с минимальной ценой
+};
+
+#endif // STOCKANALYTOR_HPP
