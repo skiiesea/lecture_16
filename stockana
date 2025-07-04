@@ -1,4 +1,4 @@
-#ifndef STOCKANALYTOR_HPP
+#ifndef STOCKANALYTOR_HPP  // Защита от повторного включения
 #define STOCKANALYTOR_HPP
 
 #include <string>
@@ -6,126 +6,123 @@
 
 class StockAnalytor {
 private:
-    std::vector<std::pair<std::string, double>> data; // Дата и цена
+    std::vector<std::pair<std::string, double>> data; // Хранит дату и цену
 
+    // Вспомогательные методы (скрыты от пользователя)
     bool parseLine(const std::string& line, std::string& date, double& price);
     double calculateMean() const;
 
 public:
-    bool loadData(const std::string& filename); // Загрузка данных из файла
-
+    // Основные методы (доступны пользователю)
+    bool loadData(const std::string& filename);  // Загрузка данных из файла
     double getMeanPrice() const;                // Средняя цена
     double getStandardDeviation() const;        // Стандартное отклонение
-    std::pair<std::string, double> getMaxPriceDay() const;  // День с максимальной ценой
-    std::pair<std::string, double> getMinPriceDay() const;  // День с минимальной ценой
+    std::pair<std::string, double> getMaxPriceDay() const;  // День с макс. ценой
+    std::pair<std::string, double> getMinPriceDay() const;  // День с мин. ценой
 };
 
-#endif // STOCKANALYTOR_HPP
 #include "StockAnalytor.hpp"
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <cmath> // Для sqrt (разрешено, т.к. это часть стандартной библиотеки C++)
+#include <cmath> // Для std::sqrt
 
+// Разбирает строку формата "дата,цена"
 bool StockAnalytor::parseLine(const std::string& line, std::string& date, double& price) {
-    size_t commaPos = line.find(',');
-    if (commaPos == std::string::npos) {
-        return false;
-    }
+    size_t commaPos = line.find(','); // Ищем запятую
+    if (commaPos == std::string::npos) return false; // Если нет запятой — ошибка
 
-    date = line.substr(0, commaPos);
-    std::string priceStr = line.substr(commaPos + 1);
+    date = line.substr(0, commaPos); // Всё до запятой — дата
+    std::string priceStr = line.substr(commaPos + 1); // Всё после — цена
 
     try {
-        price = std::stod(priceStr); // Парсим цену
+        price = std::stod(priceStr); // Пробуем преобразовать в число
     } catch (...) {
-        return false;
+        return false; // Если не получилось — ошибка
     }
 
     return true;
 }
 
+// Загружает данные из файла CSV
 bool StockAnalytor::loadData(const std::string& filename) {
-    std::ifstream file(filename);
+    std::ifstream file(filename); // Открываем файл
     if (!file.is_open()) {
         std::cerr << "Ошибка: не удалось открыть файл " << filename << std::endl;
         return false;
     }
 
     std::string line;
-    while (std::getline(file, line)) {
+    while (std::getline(file, line)) { // Читаем построчно
         std::string date;
         double price;
 
-        if (parseLine(line, date, price)) {
-            data.emplace_back(date, price);
+        if (parseLine(line, date, price)) { // Если строка корректна
+            data.emplace_back(date, price); // Добавляем в вектор
         } else {
             std::cerr << "Ошибка парсинга строки: " << line << std::endl;
         }
     }
 
     file.close();
-    return !data.empty();
+    return !data.empty(); // Возвращаем true, если данные загружены
 }
 
+// Вычисляет среднюю цену
 double StockAnalytor::calculateMean() const {
-    if (data.empty()) {
-        return 0.0;
-    }
+    if (data.empty()) return 0.0;
 
     double sum = 0.0;
     for (const auto& entry : data) {
-        sum += entry.second;
+        sum += entry.second; // Суммируем все цены
     }
 
-    return sum / data.size();
+    return sum / data.size(); // Среднее = сумма / количество
 }
 
+// Возвращает среднюю цену (публичный метод)
 double StockAnalytor::getMeanPrice() const {
     return calculateMean();
 }
 
+// Вычисляет стандартное отклонение
 double StockAnalytor::getStandardDeviation() const {
-    if (data.empty()) {
-        return 0.0;
-    }
+    if (data.empty()) return 0.0;
 
     double mean = calculateMean();
     double sumSquaredDiffs = 0.0;
 
     for (const auto& entry : data) {
-        double diff = entry.second - mean;
-        sumSquaredDiffs += diff * diff;
+        double diff = entry.second - mean; // Разница с средним
+        sumSquaredDiffs += diff * diff;   // Квадрат разницы
     }
 
-    double variance = sumSquaredDiffs / data.size();
-    return std::sqrt(variance); // Используем стандартный sqrt
+    double variance = sumSquaredDiffs / data.size(); // Дисперсия
+    return std::sqrt(variance); // Стандартное отклонение = корень из дисперсии
 }
 
+// Находит день с максимальной ценой
 std::pair<std::string, double> StockAnalytor::getMaxPriceDay() const {
-    if (data.empty()) {
-        return {"", 0.0};
-    }
+    if (data.empty()) return {"", 0.0};
 
     auto maxEntry = data[0];
     for (const auto& entry : data) {
         if (entry.second > maxEntry.second) {
-            maxEntry = entry;
+            maxEntry = entry; // Обновляем максимум
         }
     }
 
     return maxEntry;
 }
 
+// Находит день с минимальной ценой
 std::pair<std::string, double> StockAnalytor::getMinPriceDay() const {
-    if (data.empty()) {
-        return {"", 0.0};
-    }
+    if (data.empty()) return {"", 0.0};
 
     auto minEntry = data[0];
     for (const auto& entry : data) {
         if (entry.second < minEntry.second) {
-            minEntry = entry;
+            minEntry = entry; // Обновляем минимум
         }
     }
 
@@ -137,14 +134,14 @@ std::pair<std::string, double> StockAnalytor::getMinPriceDay() const {
 int main() {
     StockAnalytor analyzer;
 
-    if (analyzer.loadData("prices.csv")) {
+    if (analyzer.loadData("prices.csv")) { // Загружаем данные
         std::cout << "Средняя цена: " << analyzer.getMeanPrice() << std::endl;
         std::cout << "Стандартное отклонение: " << analyzer.getStandardDeviation() << std::endl;
 
-        auto maxDay = analyzer.getMaxPriceDay();
+        auto maxDay = analyzer.getMaxPriceDay(); // День с макс. ценой
         std::cout << "Максимальная цена: " << maxDay.second << " (дата: " << maxDay.first << ")" << std::endl;
 
-        auto minDay = analyzer.getMinPriceDay();
+        auto minDay = analyzer.getMinPriceDay(); // День с мин. ценой
         std::cout << "Минимальная цена: " << minDay.second << " (дата: " << minDay.first << ")" << std::endl;
     } else {
         std::cerr << "Не удалось загрузить данные." << std::endl;
