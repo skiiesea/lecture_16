@@ -87,5 +87,9 @@ std::ostream& operator<<(std::ostream& os, const MyString& str) {
 int main() {
     MyString hello = "Hello World!";
     std::cout << hello << std::endl;
+    auto p = hello.begin();
+    std::cout << "begin(): " << *p << std::endl;
+    for(auto& c : hello)
+        std::cout << c << '\n';
     return 0;
 }
