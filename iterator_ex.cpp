@@ -8,59 +8,56 @@ private:
         friend class MyString;
     public:
         typedef Iter iterator_type;
-        typedef std::forward_iterator_tag iterator_category; // Добавляем синонимы
-        typedef ptrdiff_t difference_type; // Корректно вычислять расстояние между 
+        typedef std::forward_iterator_tag iterator_category;
+        typedef ptrdiff_t difference_type;
         typedef iterator_type value_type;
-        typedef iterator_type& reference; // ссылка
-        typedef iterator_type* pointer; // указатель
+        typedef iterator_type& reference;
+        typedef iterator_type* pointer;
 
-        iterator_type* value; // Хранит указатель
+        iterator_type* value_;
     private:
-        MyStringIterator(Iter* p) : value(p) {};
+        MyStringIterator(Iter* p) : value_(p) {}
     public:
-        MyStringIterator(const MyStringIterator& rhs) : value(rhs.value) {};
-        bool operator != (const MyStringIterator& rhs) const noexcept {return value != rhs.value; }
-        bool operator == (const MyStringIterator& rhs) const noexcept {return value == rhs.value; }
-        typedef MyStringIterator::reference operator* () const noexcept {return *value;}
-        MyStringIterator& operator++() {++value; return *this;}
-        MyStringIterator operator++(int) {
-            MyStringIterator tmp = *this;
+        MyStringIterator(const MyStringIterator& rhs) : value_(rhs.value_) {}
+        MyStringIterator(MyStringIterator&& rhs) {std::swap(value_, rhs.value_); }
+        bool operator==(const MyStringIterator& rhs) const noexcept {return value_ == rhs.value_;}
+        bool operator!=(const MyStringIterator& rhs) const noexcept {return value_ != rhs.value_;}
+        reference operator*() const noexcept {return *value_;}
+        MyStringIterator& operator++() {++value_; return *this;}
+        MyStringIterator operator++(int) noexcept {
+            MyStringIterator temp {*this};
             ++(*this);
-            return tmp; 
+            return temp;
         }
     };
 private:
     size_t sz_;
     char* str_;
 public:
-    MyString() : sz_(0), str_(nullptr) {};
-    MyString(const char* source) {
-        if(source == "") {
+    MyString() : sz_(0), str_(nullptr) {}
+    MyString(const char* src) {
+        if(src == "" || src == nullptr) {
             sz_ = 0;
             str_ = nullptr;
         } else {
-            sz_ = strlen(source);
+            sz_ = strlen(src);
             str_ = new char[sz_];
-            char* p = str_;
-            for (size_t i = 0; i < sz_; ++i) {
-                *p = source[i];
-                ++p;
+            char* current = str_;
+            for(size_t i = 0; i < sz_; ++i) {
+                *current = src[i];
+                ++current;
             }
         }
     }
-    MyString(const MyString& rhs) { // Copy
-        if(rhs.sz_ > 0) {
-            sz_ = rhs.sz_;
+    MyString(const MyString& src) {
+        if (src.sz_ > 0) {
+            sz_ = src.sz_;
             str_ = new char[sz_];
-            char* p = str_;
-            char* p_rhs = rhs.str_;
-            for (size_t i = 0; i < sz_; ++i) {
-                *p = *p_rhs;
-                ++p; ++p_rhs;
-            }
-        } else {
-            sz_ = 0;
-            str_ = nullptr;
+            for(size_t i = 0; i > sz_; ++i) 
+                str_[i] = src.str_[i];
+            } else {
+                sz_ = 0;
+                str_ = nullptr;
         }
     }
     MyString(MyString&& rhs) : sz_(0), str_(nullptr) {
@@ -68,10 +65,27 @@ public:
         std::swap(str_, rhs.str_);
     }
     ~MyString() {
-        if(sz_ > 0) delete[] str_;
+        delete[] str_;
     }
 
     typedef MyStringIterator<char> iterator;
-    typedef MyStringIterator<const char> const_siterator;
+    typedef MyStringIterator<const char> const_iterator;
 
+    const_iterator begin() const { return const_iterator(str_); }
+    const_iterator end() const {return const_iterator(str_ + sz_);}
+
+    void dump(std::ostream& os) const {
+        for(auto& ch : *this)
+            os << ch;
+    }
 };
+std::ostream& operator<<(std::ostream& os, const MyString& str) {
+    str.dump(os);
+    return os;
+}
+
+int main() {
+    MyString hello = "Hello World!";
+    std::cout << hello << std::endl;
+    return 0;
+}
