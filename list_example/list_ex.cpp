@@ -18,18 +18,32 @@ struct ListNode {
     }
 };
 
-
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const ListNode<T>& top){
     top.dump(os);
     return os;
 }
 
-int main() {
-    ListNode<int>* top = new ListNode(1);
-    top->next_ = new ListNode<int>(2);
-    top->next_->next_ = new ListNode<int>(3);
-    std::cout << *top;
-    return 0;
+ListNode<int>* even_odd_list() {
+    ListNode<int>* even_list = nullptr;
+    ListNode<int>* odd_list = nullptr;
 
+    int x;
+    while (std::cin >> x) {
+        ListNode<int>* node = new ListNode(x);
+        if(x % 2 == 0) { node->next_ = odd_list; odd_list = node;} else{node->next_ = even_list; even_list = node;}
+    }
+    if(even_list){
+        ListNode<int>* current = even_list;
+        while(current->next_)
+            current = current->next_;
+        current->next_ = odd_list;
+        return even_list;
+    } else return odd_list;
+};
+
+int main() {
+ListNode<int>* top = even_odd_list();
+    std::cout << *top << std::endl;
+    return 0;
 }
