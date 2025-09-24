@@ -1,0 +1,79 @@
+#include <iostream>
+#include <string>
+
+template <typename T>
+
+struct ListNode {
+    T val_;
+    ListNode *next_;
+    ListNode(T val) : val_(val), next_(nullptr) {} 
+    void dump(std::ostream& os) const {
+        os << val_;
+        ListNode *next = next_;
+        while (next) {
+            os << " " << next->val_;
+            next = next->next_;
+        }
+        return;
+    }
+};
+
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const ListNode<T>& top){
+    top.dump(os);
+    return os;
+}
+
+ListNode<int>* even_odd_list() {
+    ListNode<int>* even_list = nullptr;
+    ListNode<int>* odd_list = nullptr;
+
+    int x;
+    while (std::cin >> x) {
+        ListNode<int>* node = new ListNode(x);
+        if(x % 2 == 0) { node->next_ = odd_list; odd_list = node;} else{node->next_ = even_list; even_list = node;}
+    }
+    if(even_list){
+        ListNode<int>* current = even_list;
+        while(current->next_)
+            current = current->next_;
+        current->next_ = odd_list;
+        return even_list;
+    } else return odd_list;
+};
+
+template <typename T>
+ListNode<T>* cl_push(ListNode<T>* pre, T d) {
+    if(!pre) {
+        ListNode<T>* new_node = new ListNode<T>(d); //create Первый элемент цикл.списка
+        new_node->next_ = new_node; // Замыкание на себе
+        return new_node; // return sebya
+    }
+    ListNode<T>* new_node = new ListNode<T>(d); // Новый узел
+    new_node->next_ = pre->next_; //  вставляем после узла pre
+    pre->next_ = new_node; // вставляем после узла pre
+    return new_node;
+}
+
+template <typename T>
+ListNode<T>* cl_pop(ListNode<T>* pre) {
+    if(!pre || !pre->next_) {
+        return pre; // вернуть ничего
+    }
+    if(pre->next_ == pre) { // Если только один элемент вернуть нуллптр
+        delete pre;
+        return nullptr;
+    }
+    ListNode<T>* to_delete = pre->next_;
+    pre->next_ = to_delete->next_;
+
+    delete to_delete;
+    return pre;
+}
+
+int main() {
+ListNode<int>* top = even_odd_list();
+    std::cout << *top << std::endl;
+    return 0;
+}
