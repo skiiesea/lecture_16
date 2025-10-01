@@ -1,145 +1,79 @@
-#include "StockAnalyst.hpp"
 #include <iostream>
-#include <cmath>
+#include <string>
 
-StockAnalyst::StockAnalyst() : data(nullptr), size(0), capacity(0) {}
-
-StockAnalyst::~StockAnalyst() {
-    delete[] data;
-}
-
-void StockAnalyst::resize() {
-    capacity = (capacity == 0) ? 1 : capacity * 2;
-    StockData* newData = new StockData[capacity];
-    
-    for (size_t i = 0; i < size; ++i) {
-        newData[i] = data[i];
-    }
-    
-    delete[] data;
-    data = newData;
-}
-
-double StockAnalyst::parseDouble(const std::string& s) const {
-    double result = 0.0;
-    double fraction = 1.0;
-    bool negative = false;
-    bool hasFraction = false;
-    size_t i = 0;
-
-    if (s[i] == '-') {
-        negative = true;
-        i++;
-    }
-
-    for (; i < s.length(); ++i) {
-        if (s[i] == '.') {
-            hasFraction = true;
-            i++;
-            break;
-        }
-        if (s[i] >= '0' && s[i] <= '9') {
-            result = result * 10 + (s[i] - '0');
-        }
-    }
-
-    if (hasFraction) {
-        for (; i < s.length(); ++i) {
-            if (s[i] >= '0' && s[i] <= '9') {
-                fraction *= 0.1;
-                result += (s[i] - '0') * fraction;
+template <typename T>
+class PRDList {
+    private:
+    struct BaseNode {
+        BaseNode* next_;
+};
+    struct ListNode : public BaseNode {
+        T val_;
+        ListNode(T val) : val_(val), next_(nullptr) {} 
+        
+        
+        void dump(std::ostream& os) const {
+            os << val_;
+            ListNode *next = next_;
+            while (next) {
+                os << " " << next->val_;
+                next = next->next_;
             }
+            return;
         }
-    }
-
-    return negative ? -result : result;
-}
-
-bool StockAnalyst::loadFromCSV(const std::string& filename) {
-    std::cout << "Reading data from file: " << filename << std::endl;
-    std::cout << "Enter data in format 'date,price' (one entry per line):" << std::endl;
-    std::cout << "Enter 'end' to finish input." << std::endl;
-
-    std::string line;
-    while (true) {
-        std::getline(std::cin, line);
-        if (line == "end") break;
-
-        size_t commaPos = line.find(',');
-        if (commaPos == std::string::npos) {
-            std::cout << "Invalid format: " << line << std::endl;
-            continue;
+    };
+    private:
+    BaseNode* head_;
+    private:
+    template <typename Iter>
+    class listIterator {
+        friend PRDList;
+        public:
+        typedef Iter iterator_type;
+        typedef std::forward_iterator_tag iterator_category; // Добавляем синонимы
+        typedef ptrdiff_t difference_type; // Корректно вычислять расстояние между 
+        typedef T value_type;
+        typedef T& reference; // ссылка
+        typedef iterator_type* pointer; // указатель
+        
+        pointer p_value_;
+        private:
+        listIterator(pointer p) : p_value_(p) {};
+        public:
+        listIterator(const listIterator& rhs) : p_value(rhs.p_value_) {};
+        listIterator(const listIterator&& rhs) {std::swap(p_value_; rhs.p_value_);}
+        bool operator==(const listIterator& rhs) const noexcept {return p_value_ == rhs.p_value_;}
+        bool operator!=(const listIterator& rhs) const noexcept {return p_value_ != rhs.p_value_;}
+        reference operator*() const noexcept {return static_cast<ListNode*>(p_value_)->val_;}
+        listIterator& operator++() {p_value_ = p_value_->next_; return *this;}
+        listIterator operator++(int) {
+            listIterator tmp = *this;
+            ++(*this);
+            return tmp;
         }
+    };
+public:
+    PRDList() : head_(new BaseNode){}
 
-        std::string date = line.substr(0, commaPos);
-        std::string priceStr = line.substr(commaPos + 1);
+    typedef listIterator<BaseNode> iterator;
+    typedef listIterator<const BaseNode> const_iterator;
 
-        if (size >= capacity) {
-            resize();
-        }
-
-        data[size].date = date;
-        data[size].price = parseDouble(priceStr);
-        size++;
+    const_iterator begin()  { return const_iterator(head_); }
+    const_iterator end()  {
+        auto current = head_;
+        while (current->next_)
+            current = current->next_;
+            return const_iterator{current};
     }
 
-    return size > 0;
-}
-
-double StockAnalyst::calculateAveragePrice() const {
-    if (size == 0) return 0.0;
-    
-    double sum = 0.0;
-    for (size_t i = 0; i < size; ++i) {
-        sum += data[i].price;
+    iterator push_front(const T& value) {
+        ListNode* node = new ListNode(value);
+        node->next_ = head_;
+        head_ = node;
+        return iterator{head_};
     }
-    return sum / size;
-}
 
-double StockAnalyst::calculateStandardDeviation() const {
-    if (size < 2) return 0.0;
-    
-    double mean = calculateAveragePrice();
-    double sumSquaredDifferences = 0.0;
-    
-    for (size_t i = 0; i < size; ++i) {
-        double diff = data[i].price - mean;
-        sumSquaredDifferences += diff * diff;
+    iterator push_back(const T& value) {
+        
     }
-    
-    return std::sqrt(sumSquaredDifferences / (size - 1));
-}
-
-std::string StockAnalyst::findDateWithMinPrice() const {
-    if (size == 0) return "";
-    
-    size_t minIndex = 0;
-    for (size_t i = 1; i < size; ++i) {
-        if (data[i].price < data[minIndex].price) {
-            minIndex = i;
-        }
-    }
-    return data[minIndex].date;
-}
-
-std::string StockAnalyst::findDateWithMaxPrice() const {
-    if (size == 0) return "";
-    
-    size_t maxIndex = 0;
-    for (size_t i = 1; i < size; ++i) {
-        if (data[i].price > data[maxIndex].price) {
-            maxIndex = i;
-        }
-    }
-    return data[maxIndex].date;
-}
-
-void StockAnalyst::printAnalysisReport() const {
-    std::cout << "\nStock Analysis Report:" << std::endl;
-    std::cout << "---------------------" << std::endl;
-    std::cout << "Data points: " << size << std::endl;
-    std::cout << "Average price: " << calculateAveragePrice() << std::endl;
-    std::cout << "Standard deviation: " << calculateStandardDeviation() << std::endl;
-    std::cout << "Date with minimum price: " << findDateWithMinPrice() << std::endl;
-    std::cout << "Date with maximum price: " << findDateWithMaxPrice() << std::endl;
-}
+};
