@@ -1,79 +1,191 @@
+
 #include <iostream>
-#include <string>
 
-template <typename T>
-
+// Узел односвязного списка
 struct ListNode {
-    T val_;
-    ListNode *next_;
-    ListNode(T val) : val_(val), next_(nullptr) {} 
-    void dump(std::ostream& os) const {
-        os << val_;
-        ListNode *next = next_;
-        while (next) {
-            os << " " << next->val_;
-            next = next->next_;
+    int data;
+    ListNode* next;
+    
+    ListNode(int val) : data(val), next(nullptr) {}
+};
+
+// Итератор для списка
+class ListIterator {
+private:
+    ListNode* current;
+    
+public:
+    ListIterator(ListNode* node) : current(node) {}
+    
+    // Оператор разыменования
+    int& operator*() {
+        return current->data;
+    }
+    
+    // Префиксный инкремент
+    ListIterator& operator++() {
+        if (current) {
+            current = current->next;
         }
+        return *this;
+    }
+    
+    // Постфиксный инкремент
+    ListIterator operator++(int) {
+        ListIterator temp = *this;
+        ++(*this);
+        return temp;
+    }
+    
+    // Операторы сравнения
+    bool operator==(const ListIterator& other) const {
+        return current == other.current;
+    }
+    
+    bool operator!=(const ListIterator& other) const {
+        return !(*this == other);
+    }
+};
+
+// Функция для вставки элемента в отсортированный список
+void sorted_insert(ListNode*& head, int value) {
+    ListNode* new_node = new ListNode(value);
+    
+    // Если список пуст или новый элемент должен быть первым
+    if (!head || head->data >= value) {
+        new_node->next = head;
+        head = new_node;
         return;
     }
-};
-
-
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const ListNode<T>& top){
-    top.dump(os);
-    return os;
+    
+    // Находим позицию для вставки
+    ListNode* current = head;
+    while (current->next && current->next->data < value) {
+        current = current->next;
+    }
+    
+    new_node->next = current->next;
+    current->next = new_node;
 }
 
-ListNode<int>* even_odd_list() {
-    ListNode<int>* even_list = nullptr;
-    ListNode<int>* odd_list = nullptr;
-
-    int x;
-    while (std::cin >> x) {
-        ListNode<int>* node = new ListNode(x);
-        if(x % 2 == 0) { node->next_ = odd_list; odd_list = node;} else{node->next_ = even_list; even_list = node;}
+// Функция для удаления списка
+void delete_list(ListNode* head) {
+    while (head) {
+        ListNode* temp = head;
+        head = head->next;
+        delete temp;
     }
-    if(even_list){
-        ListNode<int>* current = even_list;
-        while(current->next_)
-            current = current->next_;
-        current->next_ = odd_list;
-        return even_list;
-    } else return odd_list;
-};
-
-template <typename T>
-ListNode<T>* cl_push(ListNode<T>* pre, T d) {
-    if(!pre) {
-        ListNode<T>* new_node = new ListNode<T>(d); //create Первый элемент цикл.списка
-        new_node->next_ = new_node; // Замыкание на себе
-        return new_node; // return sebya
-    }
-    ListNode<T>* new_node = new ListNode<T>(d); // Новый узел
-    new_node->next_ = pre->next_; //  вставляем после узла pre
-    pre->next_ = new_node; // вставляем после узла pre
-    return new_node;
 }
 
-template <typename T>
-ListNode<T>* cl_pop(ListNode<T>* pre) {
-    if(!pre || !pre->next_) {
-        return pre; // вернуть ничего
+// Функция для печати списка
+void print_list(ListNode* head) {
+    ListNode* current = head;
+    while (current) {
+        std::cout << current->data << " ";
+        current = current->next;
     }
-    if(pre->next_ == pre) { // Если только один элемент вернуть нуллптр
-        delete pre;
-        return nullptr;
-    }
-    ListNode<T>* to_delete = pre->next_;
-    pre->next_ = to_delete->next_;
-
-    delete to_delete;
-    return pre;
+    std::cout << std::endl;
 }
 
+// Bucket Sort реализация
+ListNode* bucket_sort(ListNode* head, int bucket_count = 10) {
+    if (!head || !head->next) {
+        return head; // Пустой список или список с одним элементом уже отсортирован
+    }
+    
+    // Находим минимальное и максимальное значение в списке
+    int min_val = head->data;
+    int max_val = head->data;
+    ListNode* current = head;
+    
+    while (current) {
+        if (current->data < min_val) min_val = current->data;
+        if (current->data > max_val) max_val = current->data;
+        current = current->next;
+    }
+    
+    // Создаем массив корзин
+    ListNode** buckets = new ListNode*[bucket_count];
+    for (int i = 0; i < bucket_count; i++) {
+        buckets[i] = nullptr;
+    }
+    
+    // Распределяем элементы по корзинам
+    current = head;
+    while (current) {
+        // Вычисляем индекс корзины
+        int bucket_index;
+        if (max_val == min_val) {
+            bucket_index = 0;
+        } else {
+            bucket_index = ((current->data - min_val) * (bucket_count - 1)) / (max_val - min_val);
+        }
+        
+        // Вставляем элемент в соответствующую корзину (отсортированно)
+        sorted_insert(buckets[bucket_index], current->data);
+        current = current->next;
+    }
+    
+    // Объединяем корзины в один отсортированный список
+    ListNode* sorted_head = nullptr;
+    ListNode* sorted_tail = nullptr;
+    
+    for (int i = 0; i < bucket_count; i++) {
+        current = buckets[i];
+        while (current) {
+            ListNode* new_node = new ListNode(current->data);
+            
+            if (!sorted_head) {
+                sorted_head = new_node;
+                sorted_tail = new_node;
+            } else {
+                sorted_tail->next = new_node;
+                sorted_tail = new_node;
+            }
+            
+            current = current->next;
+        }
+    }
+    
+    // Очищаем память корзин
+    for (int i = 0; i < bucket_count; i++) {
+        delete_list(buckets[i]);
+    }
+    delete[] buckets;
+    
+    return sorted_head;
+}
+
+// Демонстрация работы
 int main() {
-ListNode<int>* top = even_odd_list();
-    std::cout << *top << std::endl;
+    // Создаем тестовый список
+    ListNode* head = new ListNode(64);
+    head->next = new ListNode(34);
+    head->next->next = new ListNode(25);
+    head->next->next->next = new ListNode(12);
+    head->next->next->next->next = new ListNode(22);
+    head->next->next->next->next->next = new ListNode(11);
+    head->next->next->next->next->next->next = new ListNode(90);
+    
+    std::cout << "Исходный список: ";
+    print_list(head);
+    
+    // Сортируем список
+    ListNode* sorted_head = bucket_sort(head, 5);
+    
+    std::cout << "Отсортированный список: ";
+    print_list(sorted_head);
+    
+    // Демонстрация работы итератора
+    std::cout << "Обход с помощью итератора: ";
+    for (ListIterator it = sorted_head; it != ListIterator(nullptr); ++it) {
+        std::cout << *it << " ";
+    }
+    std::cout << std::endl;
+    
+    // Очищаем память
+    delete_list(head);
+    delete_list(sorted_head);
+    
     return 0;
 }
